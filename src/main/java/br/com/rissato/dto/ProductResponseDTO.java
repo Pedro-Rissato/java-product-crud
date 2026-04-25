@@ -27,5 +27,9 @@ public record ProductResponseDTO(
             "[%d] %s | price=%s | stock=%d | discount=%s%% | description=%s",
             id, name, price, stock, discountPercentage, description
     );
-}
+    }
+     @Override
+    public String toString(){
+        return "ID: " + id + " | Name: " + name + " | Price: " + price + " | Stock: " + stock + " | Description: " + description + " | Discount Percentage: " + discountPercentage + "%";
+    }
 }

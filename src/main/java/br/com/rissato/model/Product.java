@@ -4,8 +4,8 @@ import java.math.BigDecimal;
 
 public class Product {
 
-    private Long id;
     private String name;
+    private Long id;
     private BigDecimal price;
     private Integer stock;
     private String description;
@@ -21,6 +21,14 @@ public class Product {
         this.price = price;
         this.stock = stock;
         this.description = description;
+    }
+    public Product(String name, Long id, BigDecimal price, Integer stock, String description, BigDecimal discountPercentage) {
+        this.name = name;
+        this.id = id;
+        this.price = price;
+        this.stock = stock;
+        this.description = description;
+        this.discountPercentage = discountPercentage;
     }
 
     public String getName() {
@@ -77,10 +85,7 @@ public class Product {
     public int hashCode() {
         return java.util.Objects.hash(id);
     }
-    @Override
-    public String toString(){
-        return "ID: " + id + " | Name: " + name + " | Price: " + price + " | Stock: " + stock + " | Description: " + description + " | Discount Percentage: " + discountPercentage + "%";
-    }
+    
 
 
 }
