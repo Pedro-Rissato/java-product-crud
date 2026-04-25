@@ -22,4 +22,10 @@ public record ProductResponseDTO(
             product.getDiscountPercentage()
         );
     }
+    public String toFormattedString() {
+    return String.format(
+            "[%d] %s | price=%s | stock=%d | discount=%s%% | description=%s",
+            id, name, price, stock, discountPercentage, description
+    );
+}
 }
