@@ -15,6 +15,7 @@ public class ConnectionFactory {
         }
 
         HikariConfig config = new HikariConfig();
+        config.setDriverClassName("org.postgresql.Driver");
         config.setJdbcUrl(dbConfig.url());
         config.setUsername(dbConfig.user());
         config.setPassword(dbConfig.password());
@@ -41,4 +42,4 @@ public class ConnectionFactory {
         DbConfig dbConfig = DbConfig.load();
         return new ConnectionFactory(dbConfig);
     }
-}
+} 
