@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:16
+    container_name: postgres-product-crud
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: product-crud-java
+      POSTGRES_USER: crud
+      POSTGRES_PASSWORD: java
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crud -d product-crud-java"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: java-product-crud
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/product-crud-java
+      DB_USER: crud
+      DB_PASSWORD: java
+
+volumes:
+  postgres_data:
