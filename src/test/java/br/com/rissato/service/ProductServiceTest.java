@@ -1,6 +1,7 @@
 package br.com.rissato.service;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import br.com.rissato.dto.ProductPriceResponseDTO;
 import br.com.rissato.dto.ProductRequestDTO;
+import br.com.rissato.dto.ProductResponseDTO;
 import br.com.rissato.exception.ProductNotFoundException;
 import br.com.rissato.exception.ValidationException;
 import br.com.rissato.repository.ProductRepository;
@@ -626,7 +628,7 @@ public void shouldThrowValidationExceptionWhenCreatingProductWithNullDTO() {
         assertEquals("Product not found with the id: 999.", ex.getMessage());
     }
 
-    
+
     @Test
     public void shouldAdjustDescriptionWithValidValue() {
         ProductRequestDTO dto = new ProductRequestDTO(
@@ -675,6 +677,82 @@ public void shouldThrowValidationExceptionWhenCreatingProductWithNullDTO() {
     @Test
     public void shouldThrowProductNotFoundExceptionWhenAdjustingDescriptionForNonExistingProduct() {
         ProductNotFoundException ex = assertThrows(ProductNotFoundException.class, () -> service.adjustDescription(999L, "Updated Description"));
+        assertEquals("Product not found with the id: 999.", ex.getMessage());
+    }
+
+
+     @Test
+    public void shouldGetProductByIdForExistingProduct() {
+        ProductRequestDTO dto = new ProductRequestDTO(
+            "Test Product",
+            new BigDecimal("100.00"),
+            100,
+            "Test Description"
+        );
+        service.createProduct(dto);
+        Long productId = repository.findAll().get(0).getId();
+
+        ProductResponseDTO response = service.getProductById(productId);
+
+        assertEquals(productId, response.id(), "Product ID should match");
+        assertEquals("Test Product", response.name(), "Product name should match");
+        assertEquals(new BigDecimal("100.00"), response.price(), "Product price should match");
+        assertEquals(100, response.stock(), "Product stock should match");
+        assertEquals("Test Description", response.description(), "Product description should match");
+    }
+    @Test
+    public void shouldThrowProductNotFoundExceptionWhenGettingNonExistingProductById() {
+        ProductNotFoundException ex = assertThrows(ProductNotFoundException.class, () -> service.getProductById(999L));
+        assertEquals("Product not found with the id: 999.", ex.getMessage());
+    }
+
+
+    @Test
+    public void shouldGetAllProducts() {
+        ProductRequestDTO dto1 = new ProductRequestDTO(
+            "Test Product 1",
+            new BigDecimal("10.00"),
+            100,
+            "Test Description 1"
+        );
+        ProductRequestDTO dto2 = new ProductRequestDTO(
+            "Test Product 2",
+            new BigDecimal("20.00"),
+            200,
+            "Test Description 2"
+        );
+        service.createProduct(dto1);
+        service.createProduct(dto2);
+
+        List<ProductResponseDTO> products = service.getAllProducts();
+
+        assertEquals(2, products.size(), "Should return all created products");
+    }
+    @Test
+    public void shouldReturnEmptyListWhenNoProductsExist() {
+        List<ProductResponseDTO> products = service.getAllProducts();
+        assertTrue(products.isEmpty(), "Should return empty list when no products exist");
+    }
+
+    
+    @Test
+    public void shouldDeleteExistingProduct() {
+        ProductRequestDTO dto = new ProductRequestDTO(
+            "Test Product",
+            new BigDecimal("10.00"),
+            100,
+            "Test Description"
+        );
+        service.createProduct(dto);
+        Long productId = repository.findAll().get(0).getId();
+
+        service.deleteById(productId);
+
+        assertTrue(repository.findById(productId).isEmpty(), "Product should be deleted");
+    }
+    @Test
+    public void shouldThrowProductNotFoundExceptionWhenDeletingNonExistingProduct() {
+        ProductNotFoundException ex = assertThrows(ProductNotFoundException.class, () -> service.deleteById(999L));
         assertEquals("Product not found with the id: 999.", ex.getMessage());
     }
 }
