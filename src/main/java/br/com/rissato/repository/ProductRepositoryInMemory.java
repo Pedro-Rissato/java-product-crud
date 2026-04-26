@@ -53,15 +53,17 @@ public class ProductRepositoryInMemory implements ProductRepository {
         if (existing == null) {
             throw new NoSuchElementException("Product not found with id: " + id);
         }
-
+        Integer newStock = existing.getStock() + stock;
+        if (newStock < 0) {
+            throw new IllegalArgumentException("Stock cannot be negative.");
+        }
         Product updatedProduct = new Product(
             existing.getName(),
             existing.getId(),
             existing.getPrice(),
-            stock,
+            newStock,
             existing.getDescription()
         );
-
         storage.put(id, updatedProduct);
     }
 

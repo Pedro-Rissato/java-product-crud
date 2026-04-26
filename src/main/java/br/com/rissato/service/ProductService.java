@@ -28,19 +28,20 @@ public class ProductService {
         throw new ValidationException("Price must be greater than zero.");
     }
     if (dto.stock() == null || dto.stock() < 0) {
-        throw new ValidationException("Stock cannot be negative.");
+        throw new ValidationException("Stock cannot be null or negative.");
     }
 }
 
     public void createProduct(ProductRequestDTO dto) {
         validateProductDTO(dto);
         Product product = new Product(
-                dto.name(),
+                dto.name(),    
                 null,
                 dto.price(),
                 dto.stock(),
                 dto.description()
         );
+
         repository.save(product);
     }
 
@@ -74,7 +75,12 @@ public class ProductService {
         repository.deleteById(id);
     }
 
-    
+    public void updateStock(Long id, Integer quantity) {
+    if (quantity == null || quantity == 0) {
+        throw new ValidationException("Quantity cannot be null or zero");
+    }
+    repository.updateStockTransactional(id, quantity); 
+    }
 
     public void updateDiscount(Long id, BigDecimal discount) {
         Product exists = getExistingProduct(id);
@@ -127,11 +133,5 @@ public class ProductService {
     private Product getExistingProduct(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not find with the id: " + id));
-    }
-    public void updateStock(Long id, Integer quantity) {
-    if (quantity == null || quantity == 0) {
-        throw new ValidationException("Quantity cannot be null or zero");
-    }
-    repository.updateStockTransactional(id, quantity); 
     }
 }
