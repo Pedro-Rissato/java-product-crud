@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import br.com.rissato.dto.ProductPriceResponseDTO;
 import br.com.rissato.dto.ProductRequestDTO;
 import br.com.rissato.exception.ProductNotFoundException;
 import br.com.rissato.exception.ValidationException;
@@ -107,6 +108,8 @@ public void shouldThrowValidationExceptionWhenCreatingProductWithNullDTO() {
         assertEquals("Price must be greater than zero.", ex.getMessage());
         assertTrue(repository.findAll().isEmpty(), "Product should not be created with zero price");
     }
+
+
     @Test
     public void shouldUpdateProductWithValidDTO() {
         ProductRequestDTO dto = new ProductRequestDTO(
@@ -313,6 +316,8 @@ public void shouldThrowValidationExceptionWhenCreatingProductWithNullDTO() {
         assertEquals("Stock cannot be null or negative.", ex.getMessage());
         assertEquals(100, repository.findById(productId).get().getStock(), "Product stock should not be updated with null stock");
     }
+
+
      @Test
     public void shouldUpdateStockWithPositiveQuantity(){
         ProductRequestDTO dto = new ProductRequestDTO(
@@ -366,5 +371,310 @@ public void shouldThrowValidationExceptionWhenCreatingProductWithNullDTO() {
         ValidationException ex = assertThrows(ValidationException.class, () -> service.updateStock(productID, null));
         assertEquals("Quantity cannot be null or zero", ex.getMessage());
         assertEquals(100, repository.findById(productID).get().getStock(), "Stock should not be updated with null quantity");
+    }
+    @Test
+    public void shouldUpdateDiscountForExistingProduct() {
+        ProductRequestDTO dto = new ProductRequestDTO(
+            "Test Product",
+            new BigDecimal("100.00"),
+            100,
+            "Test Description"
+        );
+        service.createProduct(dto);
+        Long productId = repository.findAll().get(0).getId();
+
+        service.updateDiscount(productId, new BigDecimal("10.00"));
+
+        assertEquals(new BigDecimal("10.00"), repository.findById(productId).get().getDiscountPercentage(), "Product price should be updated with discount");    
+    }
+    @Test
+    public void shouldThrowProductNotFoundExceptionWhenUpdatingDiscountForNonExistingProduct() {
+        ProductNotFoundException ex = assertThrows(ProductNotFoundException.class, () -> service.updateDiscount(999L, new BigDecimal("10.00")));
+        assertEquals("Product not found with the id: 999.", ex.getMessage());
+    }
+    @Test
+    public void shouldThrowValidationExceptionWhenUpdatingDiscountWithNullValue() {
+        ProductRequestDTO dto = new ProductRequestDTO(
+            "Test Product",
+            new BigDecimal("100.00"),
+            100,
+            "Test Description"
+        );
+        service.createProduct(dto);
+        Long productId = repository.findAll().get(0).getId();
+
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.updateDiscount(productId, null));
+        assertEquals("Discount must be between 0 and 100.", ex.getMessage());
+        assertEquals(new BigDecimal("100.00"), repository.findById(productId).get().getPrice(), "Product price should not be updated with null discount");
+    }
+    @Test
+    public void shouldThrowValidationExceptionWhenUpdatingDiscountWithNegativeValue() {
+        ProductRequestDTO dto = new ProductRequestDTO(
+            "Test Product",
+            new BigDecimal("100.00"),
+            100,
+            "Test Description"
+        );
+        service.createProduct(dto);
+        Long productId = repository.findAll().get(0).getId();
+
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.updateDiscount(productId, new BigDecimal("-10.00")));
+        assertEquals("Discount must be between 0 and 100.", ex.getMessage());
+        assertEquals(new BigDecimal("100.00"), repository.findById(productId).get().getPrice(), "Product price should not be updated with negative discount");
+    }
+    @Test
+    public void shouldThrowValidationExceptionWhenUpdatingDiscountWithEqualTo100() {
+        ProductRequestDTO dto = new ProductRequestDTO(
+            "Test Product",
+            new BigDecimal("100.00"),
+            100,
+            "Test Description"
+        );
+        service.createProduct(dto);
+        Long productId = repository.findAll().get(0).getId();
+
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.updateDiscount(productId, new BigDecimal("100.00")));
+        assertEquals("Discount must be between 0 and 100.", ex.getMessage());
+        assertEquals(new BigDecimal("100.00"), repository.findById(productId).get().getPrice(), "Product price should not be updated with discount greater than or equal to 100");
+    }
+    @Test
+    public void shouldThrowValidationExceptionWhenUpdatingDiscountWithValueGreaterThan100() {
+        ProductRequestDTO dto = new ProductRequestDTO(
+            "Test Product",
+            new BigDecimal("100.00"),
+            100,
+            "Test Description"
+        );
+        service.createProduct(dto);
+        Long productId = repository.findAll().get(0).getId();
+
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.updateDiscount(productId, new BigDecimal("110.00")));
+        assertEquals("Discount must be between 0 and 100.", ex.getMessage());
+        assertEquals(new BigDecimal("100.00"), repository.findById(productId).get().getPrice(), "Product price should not be updated with discount greater than or equal to 100");
+    }
+
+  
+    @Test
+    public void shouldCalculateFinalPriceWithDiscount() {
+        ProductRequestDTO dto = new ProductRequestDTO(
+            "Test Product",
+            new BigDecimal("100.00"),
+            100,
+            "Test Description"
+        );
+        service.createProduct(dto);
+        Long productId = repository.findAll().get(0).getId();
+
+        service.updateDiscount(productId, new BigDecimal("10.00"));
+        ProductPriceResponseDTO priceResponse = service.getFinalPrice(productId);
+
+        assertEquals(new BigDecimal("90.00"), priceResponse.finalPrice(), "Final price should be calculated with discount");
+    }
+    @Test
+    public void shouldHandleNullDiscountAsZero() {
+        ProductRequestDTO dto = new ProductRequestDTO(
+            "Test Product",
+            new BigDecimal("100.00"),
+            100,
+            "Test Description"
+        );
+        service.createProduct(dto);
+        Long productId = repository.findAll().get(0).getId();
+
+        ProductPriceResponseDTO priceResponse = service.getFinalPrice(productId);
+
+        assertEquals(new BigDecimal("100.00"), priceResponse.finalPrice(), "Final price should be equal to original price when no discount is applied");
+    }
+    @Test
+    public void shouldThrowProductNotFoundExceptionWhenGettingFinalPriceForNonExistingProduct() {
+        ProductNotFoundException ex = assertThrows(ProductNotFoundException.class, () -> service.getFinalPrice(999L));
+        assertEquals("Product not found with the id: 999.", ex.getMessage());
+    }
+    @Test
+    public void shouldReturnOriginalPriceWithZeroDiscount() {
+        ProductRequestDTO dto = new ProductRequestDTO(
+            "Test Product",
+            new BigDecimal("100.00"),
+            100,
+            "Test Description"
+        );
+        service.createProduct(dto);
+        Long productId = repository.findAll().get(0).getId();
+
+        service.updateDiscount(productId, BigDecimal.ZERO);
+        ProductPriceResponseDTO priceResponse = service.getFinalPrice(productId);
+
+        assertEquals(new BigDecimal("100.00"), priceResponse.finalPrice(), "Final price should be equal to original price when discount is zero"); 
+    }
+
+
+    @Test
+    public void shouldAdjustPriceWithValidValue() {
+        ProductRequestDTO dto = new ProductRequestDTO(
+            "Test Product",
+            new BigDecimal("100.00"),
+            100,
+            "Test Description"
+        );
+        service.createProduct(dto);
+        Long productId = repository.findAll().get(0).getId();
+
+        service.adjustPrice(productId, new BigDecimal("150.00"));
+
+        assertEquals(new BigDecimal("150.00"), repository.findById(productId).get().getPrice(), "Product price should be adjusted with valid value");
+    }
+    @Test
+    public void shouldThrowValidationExceptionWhenAdjustingPriceWithNullValue() {
+        ProductRequestDTO dto = new ProductRequestDTO(
+            "Test Product",
+            new BigDecimal("100.00"),
+            100,
+            "Test Description"
+        );
+        service.createProduct(dto);
+        Long productId = repository.findAll().get(0).getId();
+
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.adjustPrice(productId, null));
+        assertEquals("Price must be greater than zero.", ex.getMessage());
+        assertEquals(new BigDecimal("100.00"), repository.findById(productId).get().getPrice(), "Product price should not be adjusted with null value");
+    }
+    @Test
+    public void shouldThrowValidationExceptionWhenAdjustingPriceWithZeroValue() {
+        ProductRequestDTO dto = new ProductRequestDTO(
+            "Test Product",
+            new BigDecimal("100.00"),
+            100,
+            "Test Description"
+        );
+        service.createProduct(dto);
+        Long productId = repository.findAll().get(0).getId();
+
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.adjustPrice(productId, BigDecimal.ZERO));
+        assertEquals("Price must be greater than zero.", ex.getMessage());
+        assertEquals(new BigDecimal("100.00"), repository.findById(productId).get().getPrice(), "Product price should not be adjusted with zero value");
+    }
+    @Test
+    public void shouldThrowValidationExceptionWhenAdjustingPriceWithNegativeValue() {
+        ProductRequestDTO dto = new ProductRequestDTO(
+            "Test Product",
+            new BigDecimal("100.00"),
+            100,
+            "Test Description"
+        );
+        service.createProduct(dto);
+        Long productId = repository.findAll().get(0).getId();
+
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.adjustPrice(productId, new BigDecimal("-50.00")));
+        assertEquals("Price must be greater than zero.", ex.getMessage());
+        assertEquals(new BigDecimal("100.00"), repository.findById(productId).get().getPrice(), "Product price should not be adjusted with negative value");
+    }
+    @Test
+    public void shouldThrowProductNotFoundExceptionWhenAdjustingPriceForNonExistingProduct() {
+        ProductNotFoundException ex = assertThrows(ProductNotFoundException.class, () -> service.adjustPrice(999L, new BigDecimal("150.00")));
+        assertEquals("Product not found with the id: 999.", ex.getMessage());
+    }
+
+
+    @Test
+    public void shouldAdjustNameWithValidValue() {
+        ProductRequestDTO dto = new ProductRequestDTO(
+            "Test Product",
+            new BigDecimal("100.00"),
+            100,
+            "Test Description"
+        );
+        service.createProduct(dto);
+        Long productId = repository.findAll().get(0).getId();
+
+        service.adjustName(productId, "Updated Product");
+
+        assertEquals("Updated Product", repository.findById(productId).get().getName(), "Product name should be adjusted with valid value");
+    }
+    @Test
+    public void shouldThrowValidationExceptionWhenAdjustingNameWithNullValue() {
+        ProductRequestDTO dto = new ProductRequestDTO(
+            "Test Product",
+            new BigDecimal("100.00"),
+            100,
+            "Test Description"
+        );
+        service.createProduct(dto);
+        Long productId = repository.findAll().get(0).getId();
+
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.adjustName(productId, null));
+        assertEquals("Name cannot be null or empty.", ex.getMessage());
+        assertEquals("Test Product", repository.findById(productId).get().getName(), "Product name should not be adjusted with null value");
+    }
+    @Test
+    public void shouldThrowValidationExceptionWhenAdjustingNameWithBlankValue() {
+        ProductRequestDTO dto = new ProductRequestDTO(
+            "Test Product",
+            new BigDecimal("100.00"),
+            100,
+            "Test Description"
+        );
+        service.createProduct(dto);
+        Long productId = repository.findAll().get(0).getId();
+
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.adjustName(productId, "   "));
+        assertEquals("Name cannot be null or empty.", ex.getMessage());
+        assertEquals("Test Product", repository.findById(productId).get().getName(), "Product name should not be adjusted with blank value");
+    }
+    @Test
+    public void shouldThrowProductNotFoundExceptionWhenAdjustingNameForNonExistingProduct() {
+        ProductNotFoundException ex = assertThrows(ProductNotFoundException.class, () -> service.adjustName(999L, "Updated Product"));
+        assertEquals("Product not found with the id: 999.", ex.getMessage());
+    }
+
+    
+    @Test
+    public void shouldAdjustDescriptionWithValidValue() {
+        ProductRequestDTO dto = new ProductRequestDTO(
+            "Test Product",
+            new BigDecimal("100.00"),
+            100,
+            "Test Description"
+        );
+        service.createProduct(dto);
+        Long productId = repository.findAll().get(0).getId();
+
+        service.adjustDescription(productId, "Updated Description");
+
+        assertEquals("Updated Description", repository.findById(productId).get().getDescription(), "Product description should be adjusted with valid value");
+    }
+    @Test
+    public void shouldThrowValidationExceptionWhenAdjustingDescriptionWithNullValue() {
+        ProductRequestDTO dto = new ProductRequestDTO(
+            "Test Product",
+            new BigDecimal("100.00"),
+            100,
+            "Test Description"
+        );
+        service.createProduct(dto);
+        Long productId = repository.findAll().get(0).getId();
+
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.adjustDescription(productId, null));
+        assertEquals("Description cannot be null or empty.", ex.getMessage());
+        assertEquals("Test Description", repository.findById(productId).get().getDescription(), "Product description should not be adjusted with null value");
+    }
+    @Test
+    public void shouldThrowValidationExceptionWhenAdjustingDescriptionWithBlankValue() {
+        ProductRequestDTO dto = new ProductRequestDTO(
+            "Test Product",
+            new BigDecimal("100.00"),
+            100,
+            "Test Description"
+        );
+        service.createProduct(dto);
+        Long productId = repository.findAll().get(0).getId();
+
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.adjustDescription(productId, "   "));
+        assertEquals("Description cannot be null or empty.", ex.getMessage());
+        assertEquals("Test Description", repository.findById(productId).get().getDescription(), "Product description should not be adjusted with blank value");
+    }
+    @Test
+    public void shouldThrowProductNotFoundExceptionWhenAdjustingDescriptionForNonExistingProduct() {
+        ProductNotFoundException ex = assertThrows(ProductNotFoundException.class, () -> service.adjustDescription(999L, "Updated Description"));
+        assertEquals("Product not found with the id: 999.", ex.getMessage());
     }
 }
