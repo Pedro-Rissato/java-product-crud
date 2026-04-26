@@ -1,5 +1,8 @@
 package br.com.rissato.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -134,4 +137,5 @@ public class ProductService {
         return repository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with the id: " + id + "."));
     }
+     
 }
