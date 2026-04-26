@@ -12,7 +12,8 @@ import javax.sql.DataSource;
 
 import br.com.rissato.exception.DatabaseException;
 import br.com.rissato.exception.DuplicateProductException;
-
+import br.com.rissato.exception.ProductNotFoundException;
+import br.com.rissato.exception.ValidationException;
 import br.com.rissato.model.Product;
 
 public class ProductRepositoryPostgres implements ProductRepository {
@@ -125,7 +126,45 @@ public class ProductRepositoryPostgres implements ProductRepository {
     }
     @Override
     public void updateStockTransactional(Long id, int quantity) {
-        
+        String sqlSelect = "SELECT stock FROM products WHERE id = ? FOR UPDATE";
+        String sqlUpdate = "UPDATE products SET stock = ? WHERE id = ?";
+
+        try (Connection conn = dataSource.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement selectStmt = conn.prepareStatement(sqlSelect)) {
+                selectStmt.setLong(1, id);
+                try (ResultSet rs = selectStmt.executeQuery()) {
+                    if (!rs.next()) {
+                        throw new ProductNotFoundException("Product not found: " + id);
+                    }
+                    int currentStock = rs.getInt("stock");
+                    int newStock = currentStock + quantity;
+                    if (newStock < 0) {
+                        throw new ValidationException("Stock cannot be negative");
+                    }
+
+                    try (PreparedStatement updateStmt = conn.prepareStatement(sqlUpdate)) {
+                        updateStmt.setInt(1, newStock);
+                        updateStmt.setLong(2, id);
+                        int rows = updateStmt.executeUpdate();
+                        if (rows == 0) {
+                            throw new DatabaseException("Failed to update stock", null);
+                        }
+                    }
+                }
+                conn.commit();
+            } catch (RuntimeException e) {
+                conn.rollback();
+                throw e;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw translateSQLException("Error updating stock", e);
+            }
+
+            } catch (SQLException e) {
+                throw translateSQLException("Connection error updating stock", e);
+            }
     }
     @Override
     public void deleteById(Long id) {

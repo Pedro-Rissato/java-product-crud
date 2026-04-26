@@ -128,5 +128,10 @@ public class ProductService {
         return repository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not find with the id: " + id));
     }
-    
+    public void updateStock(Long id, Integer quantity) {
+    if (quantity == null || quantity == 0) {
+        throw new ValidationException("Quantity cannot be null or zero");
+    }
+    repository.updateStockTransactional(id, quantity); 
+    }
 }
