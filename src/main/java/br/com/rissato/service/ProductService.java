@@ -132,6 +132,6 @@ public class ProductService {
 
     private Product getExistingProduct(Long id) {
         return repository.findById(id)
-                .orElseThrow(() -> new ProductNotFoundException("Product not find with the id: " + id));
+                .orElseThrow(() -> new ProductNotFoundException("Product not found with the id: " + id + "."));
     }
 }
