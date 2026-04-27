@@ -52,7 +52,7 @@ DB_PASSWORD=java
 ### 3. Start the database
 
 ```bash
-docker compose -f dcoker-compose.yml up -d db
+docker compose -f docker-compose.yml up -d db
 ```
 
 ### 4. Build and run
@@ -67,7 +67,7 @@ java -jar target/crudDeProdutos-1.0-SNAPSHOT-jar-with-dependencies.jar
 ## 🐳 Full Stack with Docker Compose
 
 ```bash
-docker compose -f dcoker-compose.yml up --build
+docker compose -f docker-compose.yml up --build
 ```
 
 The application runs on port **8080**.
