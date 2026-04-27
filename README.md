@@ -70,6 +70,9 @@ java -jar target/crudDeProdutos-1.0-SNAPSHOT-jar-with-dependencies.jar
 docker compose -f docker-compose.yml up --build
 ```
 
+```bash
+docker exec -it java-product-crud java -jar /app/app.jar
+```
 The application runs on port **8080**.
 
 ---
