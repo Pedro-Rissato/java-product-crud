@@ -1,10 +1,10 @@
-# 📦 Product CRUD Java
+# Product CRUD Java
 
 A product management application built with **pure Java 21** (no frameworks), featuring a fully layered architecture, PostgreSQL database, HikariCP connection pooling, Flyway migrations, and integration tests with Testcontainers.
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Technology | Version | Purpose |
 |---|---|---|
@@ -28,7 +28,7 @@ A product management application built with **pure Java 21** (no frameworks), fe
 
 
 ---
-## 🚀 Getting Started
+##  Getting Started
 
 ### 1. Clone the repository
 
@@ -43,32 +43,12 @@ cd product-crud-java-homolog
 cp .env.example .env
 ```
 
-```env
-DB_URL=jdbc:postgresql://localhost:5432/product-crud-java
-DB_USER=crud
-DB_PASSWORD=java
-```
-
-### 3. Start the database
-
-```bash
-docker compose -f docker-compose.yml up -d db
-```
-
-### 4. Build and run
-
-```bash
-mvn clean package
-java -jar target/crudDeProdutos-1.0-SNAPSHOT-jar-with-dependencies.jar
-```
-
----
-
-## 🐳 Full Stack with Docker Compose
+## 3. 🐳 Full Stack with Docker Compose
 
 ```bash
 docker compose -f docker-compose.yml up --build
 ```
+## 4. Run
 
 ```bash
 docker exec -it java-product-crud java -jar /app/app.jar
@@ -77,7 +57,7 @@ The application runs on port **8080**.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 The project follows a clean **layered architecture**, wired manually via constructor injection — no IoC container, no Spring, no magic.
 
@@ -101,7 +81,7 @@ Each layer has a clear responsibility:
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 src/
@@ -122,7 +102,7 @@ src/
 
 ---
 
-## ✅ Features
+## Features
 
 ### Core CRUD
 - **Create** a product with name, price, stock and optional description
@@ -143,7 +123,7 @@ src/
 
 ---
 
-## 📐 Business Rules
+## Business Rules
 
 All rules are enforced in the `ProductService` layer:
 
@@ -159,7 +139,7 @@ All rules are enforced in the `ProductService` layer:
 
 ---
 
-## 🧱 Exception Hierarchy
+## Exception Hierarchy
 
 ```
 ProductCrudException (base RuntimeException)
@@ -171,7 +151,7 @@ ProductCrudException (base RuntimeException)
 
 ---
 
-## 🎯 Learning Goals
+## Learning Goals
 
 This project was built to practice and demonstrate:
 
@@ -190,7 +170,7 @@ This project was built to practice and demonstrate:
 
 ---
 
-## 🧪 Tests
+## Tests
 
 Integration tests use **Testcontainers** to spin up a real PostgreSQL instance automatically. Docker must be running.
 
@@ -200,7 +180,7 @@ mvn test
 
 ---
 
-## 🔄 Database Migrations
+## Database Migrations
 
 Managed by **Flyway**, migrations run automatically on startup. Scripts are located at:
 
